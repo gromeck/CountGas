@@ -15,11 +15,6 @@
 **    Counter Feedback:
 **      PIN4  => LED
 **
-**    Temperature DS1820:
-**      GND    => DS1820 GND PIN1 
-**      PIN3   <= DS1820 DATA PIN2
-**      PWR +5 => DS1820 PWR PIN3
-**
 **  Used EEPROM layout:
 **    Address
 **     0 ..  5 => MAC address to use
@@ -31,7 +26,6 @@
 **      DHCP   => device will ask for an IP address
 **      NTP    => device will connect an NTP server
 **      HTTP   <= device will reply to HTTP requests with its current time, counter value
-**                and the optional temperature sensors including their address and value.
 **
 **  HTTP GET parameters to configure the device:
 **     counterval  => set a new counter value (stored in EEPROM)
@@ -40,7 +34,6 @@
 **     ntpip       => ip address of the NTP server (stored in EEPROM; default: 0.0.0.0)
 */
 #define DBG  0
-#define TMP  0
 #define NTP  1
 
 #include <stdarg.h>
@@ -53,9 +46,6 @@
 #include "http.h"
 #include "counter.h"
 #include "eeprom.h"
-#if TMP
-#include "temp.h"
-#endif
 
 /*
 **  address in the EEPROM to store the counter
@@ -74,16 +64,13 @@ byte _mac[] = {  0xDE, 0xAD, 0xBE, 0x00, 0x00, 0x01 };
 #define COUNTER_PIN_OUT 4
 #define ACTIVITY_PIN_OUT 5
 
+#define ACTIVITY_CYCLES 10
+
 /*
 **  activity/power indicator state
 */
 int _activity_state = LOW;
-
-#if TMP
-#define TEMP_PIN  3
-time_t _temperatur_time = 0;
-const unsigned int TEMPERATURE_PRINT_CYCLE = 60;
-#endif
+int _activity_cycle = 0;
 
 void setup()
 {
@@ -130,10 +117,6 @@ void setup()
     //LogMsg("COUNTER: init counter");
     CounterInit(COUNTER_PIN_IN,COUNTER_PIN_OUT,EEPROM_ADDR_COUNTER_VAL,EEPROM_ADDR_COUNTER_INC);
 
-#if TMP
-    TempInit();
-#endif
-
     /*
     **  init done
     */
@@ -145,27 +128,15 @@ void loop()
     /*
     **    flash the activity LED
     */
-    digitalWrite(ACTIVITY_PIN_OUT,_activity_state = ((_activity_state == LOW) ? HIGH : LOW));
+    if (++_activity_cycle >= ACTIVITY_CYCLES) {
+      digitalWrite(ACTIVITY_PIN_OUT,_activity_state = ((_activity_state == LOW) ? HIGH : LOW));
+      _activity_cycle = 0;
+    }
 
     /*
     **  Update the counter
     */
     CounterUpdate();
-
-#if TMP
-    /*
-    **  Read temperature values and start next conversion.
-    */
-    TempUpdate();
-
-    /*
-    **  print temperature of all sensors.
-    */
-    if (t > _temperatur_time + TEMPERATURE_PRINT_CYCLE) {
-        TempLogMsg();
-        _temperatur_time = t; 
-    }
-#endif
 
     /*
     **  listen & handle incoming http requests
