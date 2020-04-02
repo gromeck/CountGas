@@ -72,9 +72,6 @@ static void HttpReceiveRequest(EthernetClient client)
 	  client.println(CounterGetValue(),DEC);
           client.print("INCREMENT ");
 	  client.println(CounterGetIncrement(),DEC);
-#if TMP
-          TempDump(client);
-#endif
           break;
         }
 
@@ -144,4 +141,3 @@ void HttpHandleRequest(void)
     if (WebClient)
         HttpReceiveRequest(WebClient);
 }/**/
-
