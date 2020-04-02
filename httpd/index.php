@@ -64,17 +64,18 @@ if (@$_POST['set']) {
 **	find out some network parameters
 */
 $macaddr = exec('arp '.ARDUINO.' | tail -1 | tr -s " " | cut -f3 -d" "');
-$ntpip = '192.168.0.100';
 
 /*
 **	get the current values from the selected arduino
 */
-$countervalandinc = file_get_contents('http://'.ARDUINO.'/');
-//echo "<code>countervalandinc=".$countervalandinc."</code><br>";
-$counterval = preg_filter("/(.*)COUNTER (\d+)(.*)/msi","$2",$countervalandinc);
-$counterinc = preg_filter("/(.*)INCREMENT (\d+)(.*)/msi","$2",$countervalandinc);
+$arduinoreply = file_get_contents('http://'.ARDUINO.'/');
+//echo "<code>arduinoreply=".$arduinoreply."</code><br>";
+$counterval = preg_filter("/(.*)COUNTER (\d+)(.*)/msi","$2",$arduinoreply);
+$counterinc = preg_filter("/(.*)INCREMENT (\d+)(.*)/msi","$2",$arduinoreply);
+$ntpip = preg_filter("/(.*)NTPIP (\d+\.\d+\.\d+\.\d+)(.*)/msi","$2",$arduinoreply);
 //echo "<code>counterval=".$counterval."</code><br>";
 //echo "<code>counterinc=".$counterinc."</code><br>";
+//echo "<code>netip=".$netip."</code><br>";
 
 /*
 **	compute a simple captcha
