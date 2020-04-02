@@ -1,0 +1,4 @@
+This sketch counts pulses from our gas clock,
+and measures temperatures with a set of DS1820.
+
+Values are provided via a web interface.
