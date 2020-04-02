@@ -58,6 +58,7 @@ static void HttpReceiveRequest(EthernetClient client)
           */
           time_t t = now();
           char timestamp[20];
+          uint32_t ip = 0;
           
           LogMsg("HTTP: sending reply");
           sprintf(timestamp,"%02d.%02d.%04d %02d:%02d:%02d",
@@ -69,9 +70,13 @@ static void HttpReceiveRequest(EthernetClient client)
           client.println();
           client.println("TIME " + (String) timestamp);
           client.print("COUNTER ");
-	  client.println(CounterGetValue(),DEC);
+          client.println(CounterGetValue(),DEC);
           client.print("INCREMENT ");
-	  client.println(CounterGetIncrement(),DEC);
+          client.println(CounterGetIncrement(),DEC);
+
+          EepromRead(EEPROM_ADDR_NTPIP,4,(byte *) &ip);
+          client.print("NTPIP ");
+          client.println(AddressToString((byte *) &ip,4,1));
           break;
         }
 
