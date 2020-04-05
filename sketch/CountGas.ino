@@ -83,6 +83,13 @@ void setup()
     **    configure the activity LED
     */
     pinMode(ACTIVITY_PIN_OUT,OUTPUT);
+    pinMode(COUNTER_PIN_OUT,OUTPUT);
+
+    /*
+    **    switch on the LEDs to signal initialization
+    */
+    digitalWrite(ACTIVITY_PIN_OUT,HIGH);
+    digitalWrite(COUNTER_PIN_OUT,HIGH);
 
     /*
     **  initialize serial communications
@@ -121,6 +128,12 @@ void setup()
     **  init done
     */
     LogMsg("READY");
+
+    /*
+    **    switch off the LEDs to signal readiness
+    */
+    digitalWrite(ACTIVITY_PIN_OUT,LOW);
+    digitalWrite(COUNTER_PIN_OUT,LOW);
 }
 
 void loop()
