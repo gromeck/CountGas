@@ -1,4 +1,8 @@
-This sketch counts pulses from our gas clock,
-and measures temperatures with a set of DS1820.
+Board: ESP8266
 
-Values are provided via a web interface.
+Used Pins:
+	2	in	Rain sensor reed contact
+
+Current Values are stored each hour in EEPROM
+
+Values can be requested via HTTP request

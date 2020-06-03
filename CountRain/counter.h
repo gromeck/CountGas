@@ -1,6 +1,8 @@
 /*
 **	counter prototypes
 */
+#ifndef __COUNTER_H__
+#define __COUNTER_H__ 1
 
 /*
 **	initialize the counter
@@ -10,27 +12,28 @@ void CounterInit(int counter_pin_in,int counter_pin_out,int eeprom_addr);
 /*
 **	overwrite the counter
 */
-void CounterSet(unsigned long counter);
+void CounterSetValue(double counter);
 
 /*
 **	read the counter
 */
-unsigned long CounterGetValue(void);
+double CounterGetValue(void);
 
 /*
-**	overwrite the counter increment
+**  overwrite the counter increment
 */
-void CounterSetIncrement(unsigned long increment);
+void CounterSetIncrement(double inc);
 
 /*
-**	read the increment
+**  read the counter increment
 */
-unsigned long CounterGetIncrement(void);
+double CounterGetIncrement(void);
 
 /*
 **	update the counter handling
 */
 void CounterUpdate(void);
 
-/**/
+#endif
 
+/**/
