@@ -1,5 +1,5 @@
 /*
-**	NTP prototypes
+**  NTP prototypes
 */
 #if NTP
 
@@ -7,8 +7,6 @@
 #define __NTP_H__ 1
 
 #include "util.h"
-
-#define NTP_SERVER_DEFAULT "ntp.site"
 
 /*
 **  ntp sync cycle

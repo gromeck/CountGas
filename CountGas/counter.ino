@@ -1,27 +1,27 @@
 /*
-**	counter functions
+**  counter functions
 **
-**  the tipping bucket rain sensor from MISOL is used here
-**
-**  each tip is ...
-**    0.2794mm/m²  https://pi.gate.ac.uk/posts/2014/01/25/raingauge/
-**    0.3537mm/m²  https://www.robotics.org.za/WH-SP-RG
-**    0.01inch/m²  https://www.amazon.de/MISOL-weather-Ersatzteil-Wetterstation-Manometer/dp/B00QDMBXUA (aus Frage)
-**     = 0.254mm/m²
-**    0,303mm/m²   https://www.amazon.de/MISOL-weather-Ersatzteil-Wetterstation-Manometer/dp/B00QDMBXUA (aus Rezension)
+**  each pulse is 0,001cbm of gas
 */
 #include "counter.h"
 #include "eeprom.h"
 
+#define COUNTER_PRECISION 1000000
+
 /*
 **  counter value
 */
-static double _counter_val = 0.0;
+static long _counter_val = 0;
+
+/*
+**  counter fraction / 1000000
+*/
+static long _counter_frac = 0;
 
 /*
 **  counter incremenent
 */
-static double _counter_inc = 0.3;
+static double _counter_inc = 1000;
 
 /*
 **  minimum seconds between two triggers
@@ -33,6 +33,12 @@ static double _counter_inc = 0.3;
 **  before a valid trigger is detected
 */
 #define COUNTER_MIN_TRIGGER_LENGTH 50
+
+/*
+ * compute the counter as double
+ */
+#define COUNTER2DOUBLE ((double) _counter_val + (double) _counter_frac / COUNTER_PRECISION)
+
 
 /* 
 **  flag for the counter trigger
@@ -81,7 +87,7 @@ static int _counter_pin_out;
 **  the interrupt handler is disabled
 **  right after the trigger was received
 */
-static void ICACHE_RAM_ATTR CounterTrigger()
+static void CounterTrigger()
 {
     static volatile unsigned long _last_low = 0;
     static volatile boolean _last_state = HIGH;
@@ -107,25 +113,30 @@ static void ICACHE_RAM_ATTR CounterTrigger()
 }
 
 /*
-**	initialize the counter
+**  initialize the counter
 */
 void CounterInit(int counter_pin_in,int counter_pin_out,int counter_val_eeprom_addr,int counter_inc_eeprom_addr)
 {
     time_t t = now();
+    char buffer[20];
+    double counter,increment;
 
     /*
     **  read the value stored in the EEPROM
     */
     _counter_val_eeprom_addr = counter_val_eeprom_addr;
-    EepromReadByType(_counter_val_eeprom_addr,&_counter_val);
-    LogMsg("COUNTER: value=%.6lf",_counter_val);
+    EepromReadByType(_counter_val_eeprom_addr,&counter);
+    _counter_val = counter;
+    _counter_frac = (counter - _counter_val) * COUNTER_PRECISION;
+    LogMsg("COUNTER: counter=%s",dtostrf(counter,1,6,buffer));
     
     /*
     **  read the increment stored in the EEPROM
     */
     _counter_inc_eeprom_addr = counter_inc_eeprom_addr;
-    EepromReadByType(_counter_inc_eeprom_addr,&_counter_inc);
-    LogMsg("COUNTER: increment=%.6lf",_counter_inc);
+    EepromReadByType(_counter_inc_eeprom_addr,&increment);
+    _counter_inc = increment * COUNTER_PRECISION;
+    LogMsg("COUNTER: increment=%s",dtostrf(increment,1,6,buffer));
     
     /*
     **    init some book keeping
@@ -153,25 +164,28 @@ void CounterInit(int counter_pin_in,int counter_pin_out,int counter_val_eeprom_a
 }
 
 /*
-**	overwrite the counter
+**  overwrite the counter
 */
-void CounterSetValue(double value)
+void CounterSetValue(double counter)
 {
-    _counter_val = value;
-    if (_counter_val_written != _counter_val) {
-        LogMsg("COUNTER: writing value %.6lf to EEPROM",_counter_val);
+    char buffer[20];
+    
+    if (_counter_val_written != counter) {
+        LogMsg("COUNTER: writing counter %s to EEPROM",dtostrf(_counter_val,1,6,buffer));
         EepromWriteByType(_counter_val_eeprom_addr,_counter_val);
-        _counter_val_written = _counter_val;
+        _counter_val_written = counter;
         _counter_val_written_time = now();
     }
+    _counter_val = counter;
+    _counter_frac = (counter - _counter_val) * COUNTER_PRECISION;
 }
 
 /*
-**	read the counter
+**  read the counter
 */
 double CounterGetValue(void)
 {
-    return _counter_val;
+    return (double) _counter_val + (double) _counter_frac / COUNTER_PRECISION;
 }
 
 /*
@@ -179,10 +193,13 @@ double CounterGetValue(void)
 */
 void CounterSetIncrement(double inc)
 {
-    if (_counter_inc != inc) {
-        _counter_inc = inc;
+    char buffer[20];
+
+    if (_counter_inc != inc * COUNTER_PRECISION) {
+        LogMsg("COUNTER: writing increment %s to EEPROM",dtostrf(inc,1,6,buffer));
         EepromWriteByType(_counter_inc_eeprom_addr,_counter_inc);
     }
+    _counter_inc = inc * COUNTER_PRECISION;
 }
 
 /*
@@ -190,15 +207,16 @@ void CounterSetIncrement(double inc)
 */
 double CounterGetIncrement(void)
 {
-  return _counter_inc;
+  return (double) _counter_inc / COUNTER_PRECISION;
 }
 
 /*
-**	update the counter handling
+**  update the counter handling
 */
 void CounterUpdate(void)
 {
     time_t t = now();
+    char buffer[20];
 
     /*
     **  dispatch on events
@@ -208,10 +226,14 @@ void CounterUpdate(void)
             /*
             **  counter pulse detected
             */
-            _counter_val += _counter_inc;
+            _counter_frac += _counter_inc;
+            while (_counter_frac > COUNTER_PRECISION) {
+              _counter_val++;
+              _counter_frac -= COUNTER_PRECISION;
+            }
             _counter_triggered_time = t;
             digitalWrite(_counter_pin_out,HIGH);
-            LogMsg("COUNTER: %.6lf",_counter_val);
+            LogMsg("COUNTER: value=%s",dtostrf(COUNTER2DOUBLE,1,6,buffer));
         }
         _counter_triggered = false;
     }
@@ -223,5 +245,5 @@ void CounterUpdate(void)
      * maybe it's time to write the counter to the EEPROM
      */
     if (t >= _counter_val_written_time + COUNTER_EEPROM_WRITE_CYCLE)
-      CounterSetValue(_counter_val);
+      CounterSetValue(COUNTER2DOUBLE);
 }/**/

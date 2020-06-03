@@ -1,5 +1,5 @@
 /*
-**	NTP functions
+**  NTP functions
 */
 #if NTP
 #include "util.h"
@@ -41,7 +41,7 @@ static int _ntp_sync_cycle = 0;
 /*
 **  UDP instance to let us send and receive packets
 */
-static WiFiUDP _Udp;
+static EthernetUDP _Udp;
 
 /*
 **  send an NTP request to the time server at the given address
@@ -115,28 +115,17 @@ static time_t NtpSync(void)
 }
 
 /*
-**	init the ntp functionality
+**  init the ntp functionality
 */
 void NtpInit(void)
 {
     /*
      * get the NTP from the configuration
      */
-    _ntp_server = EepromReadString(EEPROM_ADDR_NTP_SERVER,EEPROM_SIZE_NTP_SERVER);
-    if (_ntp_server == "")
-      _ntp_server = NTP_SERVER_DEFAULT;
-
-    LogMsg("NTP: server=%s",_ntp_server.c_str());
-
-    /*
-     * look up the ntpservers ip
-     */
-    if (WiFi.hostByName(_ntp_server.c_str(),_ntp_ip)) {
-      /*
-       * we could resolve the ntp name, so store it in the flash
-       */
-      LogMsg("NTP: lookup of %s successful: %s",_ntp_server.c_str(),IPAddressToString(_ntp_ip));
-    }
+    byte ip[4];
+    
+    EepromRead(EEPROM_ADDR_NTP_IP,EEPROM_SIZE_NTP_IP,ip);
+    _ntp_ip = BytesToIPAddress(ip);
 
     LogMsg("NTP: ip=%s",IPAddressToString(_ntp_ip));
 

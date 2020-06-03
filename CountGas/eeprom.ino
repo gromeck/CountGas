@@ -1,5 +1,5 @@
 /*
-**	eeprom functions & definitions
+**  eeprom functions & definitions
 */
 #include <EEPROM.h>
 
@@ -11,7 +11,6 @@ static int _eeprom_size;
 void EepromInit(const int size)
 {
     _eeprom_size = size;
-    EEPROM.begin(_eeprom_size);
 }
 
 /*
@@ -35,7 +34,6 @@ void EepromClear()
 {
     for (int n = 0;n < _eeprom_size;n++)
         EEPROM.write(n,0xff);
-    EEPROM.commit();
 }
 
 /*
@@ -63,7 +61,7 @@ int EepromRead(const int addr,const int len,byte *buffer)
 }
 
 /*
-**	write to the EEPROM
+**  write to the EEPROM
 */
 void EepromWrite(const int addr,const int len,const byte *buffer)
 {
@@ -71,7 +69,6 @@ void EepromWrite(const int addr,const int len,const byte *buffer)
         EEPROM.write(addr + n,buffer[n]);
         //LogMsg("EEPROM.write: addr[%d] = %u",addr + n,buffer[n]);
     }
-    EEPROM.commit();
 }
 
 /*

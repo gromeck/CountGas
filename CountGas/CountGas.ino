@@ -5,16 +5,22 @@
 **
 **  Needed Hardware:
 **
-**    ESP8266 with Wifi
+**    Arduino Uno
+**    Ethernet Shield
 **
 **  Connectors:
-**    GPIO #2 (D4)  OUTPUT  activity LED -- PIN is also connected to the onboard LED
-**    GPIO #4 (D2)  OUTPUT  LED flashing upon trigger
-**    GPIO #5 (D1)  INPUT   closing switch on trigger
+**    Counter trigger:
+**      PIN2   <= closing switch on trigger
+**
+**    Counter Feedback:
+**      PIN4  => LED
 **
 **  Used EEPROM layout:
 **    Address
-**     0 ..  3 => IP address of the NTP server
+**     0 ..  5 => MAC address to use
+**     6 ..  9 => IP address of the NTP server
+**    10 .. 13 => counter value
+**    14 .. 17 => counter increment per pulse
 **
 **  Runtime enviroment:
 **      DHCP   => device will ask for an IP address
@@ -31,28 +37,33 @@
 #define NTP  1
 
 #include <stdarg.h>
+#include <SPI.h>
+#include <Ethernet.h>
 #include <Time.h>
+#include <EEPROM.h>
 #include "util.h"
-#include "wifi.h"
 #include "ntp.h"
 #include "http.h"
 #include "counter.h"
 #include "eeprom.h"
 
+
 /*
- * GPIO pins to use
- */
-#define ACTIVITY_PIN_OUT 2
+**  set the own MAC address here
+*/
+byte _mac[] = {  0xDE, 0xAD, 0xBE, 0x00, 0x00, 0x01 };
+
+#define COUNTER_PIN_IN 2
 #define COUNTER_PIN_OUT 4
-#define COUNTER_PIN_IN 5
+#define ACTIVITY_PIN_OUT 5
+
+#define ACTIVITY_CYCLES 10
 
 /*
 **  activity/power indicator state
 */
-#define ACTIVITY_CYCLES 10
-static int _activity_state = LOW;
-static int _activity_cycle = 0;
-
+int _activity_state = LOW;
+int _activity_cycle = 0;
 
 void setup()
 {
@@ -72,7 +83,7 @@ void setup()
 #endif
     EepromDump();
     
-        
+
     /*
     **    configure the activity LED
     */
@@ -86,19 +97,25 @@ void setup()
     digitalWrite(COUNTER_PIN_OUT,HIGH);
 
     /*
-     * init wifi
-     */
-    WifiSetup();
-    
+    **  initialize DHCP
+    */
+    EepromRead(EEPROM_ADDR_MACADDR,6,(byte *) &_mac);
+    LogMsg("LAN: MAC=%s",AddressToString(_mac,6,0));
+    //LogMsg("LAN: init DHCP");
+    if (Ethernet.begin(_mac) == 0) {
+        LogMsg("LAN: no DHCP");
+        for(;;)
+            ;
+    }
+    uint32_t ip = Ethernet.localIP();
+    LogMsg("LAN: IP=%s",AddressToString((byte *) &ip,4,1));
 
 #if NTP
+    /*
+    **  initialize NTP
+    */
     NtpInit();
 #endif
-
-    /*
-     * init the web server
-     */
-    HttpSetup();
 
     /*
     **  init counter
@@ -132,12 +149,15 @@ void loop()
       //LogMsg("ALIVE");
     }
 
-    WifiUpdate();
 #if NTP
     NtpUpdate();
 #endif
     CounterUpdate();
+
+    /*
+    **  listen & handle incoming http requests
+    */
     HttpHandleRequest();
-    
+
     delay(100);
 }/**/
