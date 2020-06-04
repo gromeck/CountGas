@@ -7,6 +7,7 @@
 
 #include "util.h"
 
+#define HTTP_GET_VAR_ALLPARAMS  "all"
 #define HTTP_GET_VAR_MACADDR    "macaddr"
 #define HTTP_GET_VAR_NTPIP      "ntpip"
 #define HTTP_GET_VAR_COUNTER    "counter"

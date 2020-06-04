@@ -34,11 +34,6 @@ static double _counter_inc = 1000;
 */
 #define COUNTER_MIN_TRIGGER_LENGTH 50
 
-/*
- * compute the counter as double
- */
-#define COUNTER2DOUBLE ((double) _counter_val + (double) _counter_frac / COUNTER_PRECISION)
-
 
 /* 
 **  flag for the counter trigger
@@ -141,7 +136,7 @@ void CounterInit(int counter_pin_in,int counter_pin_out,int counter_val_eeprom_a
     /*
     **    init some book keeping
     */
-    _counter_val_written = _counter_val;
+    _counter_val_written = counter;
     _counter_val_written_time = t;
     _counter_triggered_time = t;
 
@@ -171,8 +166,8 @@ void CounterSetValue(double counter)
     char buffer[20];
     
     if (_counter_val_written != counter) {
-        LogMsg("COUNTER: writing counter %s to EEPROM",dtostrf(_counter_val,1,6,buffer));
-        EepromWriteByType(_counter_val_eeprom_addr,_counter_val);
+        LogMsg("COUNTER: writing counter %s to EEPROM",dtostrf(counter,1,6,buffer));
+        EepromWriteByType(_counter_val_eeprom_addr,counter);
         _counter_val_written = counter;
         _counter_val_written_time = now();
     }
@@ -195,9 +190,9 @@ void CounterSetIncrement(double inc)
 {
     char buffer[20];
 
-    if (_counter_inc != inc * COUNTER_PRECISION) {
+    if (_counter_inc != (long) inc * COUNTER_PRECISION) {
         LogMsg("COUNTER: writing increment %s to EEPROM",dtostrf(inc,1,6,buffer));
-        EepromWriteByType(_counter_inc_eeprom_addr,_counter_inc);
+        EepromWriteByType(_counter_inc_eeprom_addr,inc);
     }
     _counter_inc = inc * COUNTER_PRECISION;
 }
@@ -233,7 +228,7 @@ void CounterUpdate(void)
             }
             _counter_triggered_time = t;
             digitalWrite(_counter_pin_out,HIGH);
-            LogMsg("COUNTER: value=%s",dtostrf(COUNTER2DOUBLE,1,6,buffer));
+            LogMsg("COUNTER: value=%s",dtostrf(CounterGetValue(),1,6,buffer));
         }
         _counter_triggered = false;
     }
@@ -245,5 +240,5 @@ void CounterUpdate(void)
      * maybe it's time to write the counter to the EEPROM
      */
     if (t >= _counter_val_written_time + COUNTER_EEPROM_WRITE_CYCLE)
-      CounterSetValue(COUNTER2DOUBLE);
+      CounterSetValue(CounterGetValue());
 }/**/

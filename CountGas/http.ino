@@ -39,6 +39,7 @@ static char *HttpGetParam(String params,const char *var)
 static void HttpReceiveRequest(EthernetClient client)
 {
   char buffer[20];
+  bool allparams = false;
 
   LogMsg("HTTP: incoming request");
   String currentLine = "";
@@ -76,24 +77,30 @@ static void HttpReceiveRequest(EthernetClient client)
           dtostrf(CounterGetValue(),1,6,buffer);
           client.println(var + (String) " " + (String) buffer);
 
-          var = HTTP_GET_VAR_INCREMENT;
-          var.toUpperCase();
-          dtostrf(CounterGetIncrement(),1,6,buffer);
-          client.println(var + (String) " " + (String) buffer);
+          if (allparams) {
+            /*
+             * alle parameters should be returned
+             */
 
-          byte bytes[6];
-          IPAddress ntpip;
+            var = HTTP_GET_VAR_INCREMENT;
+            var.toUpperCase();
+            dtostrf(CounterGetIncrement(),1,6,buffer);
+            client.println(var + (String) " " + (String) buffer);
 
-          var = HTTP_GET_VAR_NTPIP;
-          var.toUpperCase();
-          EepromRead(EEPROM_ADDR_NTP_IP,EEPROM_SIZE_NTP_IP,bytes);
-          ntpip = BytesToIPAddress(bytes);
-          client.println(var + " " + (String) IPAddressToString(ntpip));
+            byte bytes[6];
+            IPAddress ntpip;
 
-          var = HTTP_GET_VAR_MACADDR;
-          var.toUpperCase();
-          EepromRead(EEPROM_ADDR_MACADDR,EEPROM_SIZE_MACADDR,bytes);
-          client.println(var + " " + (String) AddressToString(bytes,6,0));
+            var = HTTP_GET_VAR_NTPIP;
+            var.toUpperCase();
+            EepromRead(EEPROM_ADDR_NTP_IP,EEPROM_SIZE_NTP_IP,bytes);
+            ntpip = BytesToIPAddress(bytes);
+            client.println(var + " " + (String) IPAddressToString(ntpip));
+
+            var = HTTP_GET_VAR_MACADDR;
+            var.toUpperCase();
+            EepromRead(EEPROM_ADDR_MACADDR,EEPROM_SIZE_MACADDR,bytes);
+            client.println(var + " " + (String) AddressToString(bytes,6,0));
+          }
 
           break;
         }
@@ -117,6 +124,9 @@ static void HttpReceiveRequest(EthernetClient client)
             String parameters = "&" + currentLine.substring(params + 1,end) + "&";
             char *val;
 
+            if (val = HttpGetParam(parameters,HTTP_GET_VAR_ALLPARAMS)) {
+                allparams = (atoi(val)) ? 1 : 0;
+            }
             if (val = HttpGetParam(parameters,HTTP_GET_VAR_MACADDR)) {
                 const byte *macaddr = StringToAddress(val,6,0);
 
