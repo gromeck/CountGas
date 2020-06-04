@@ -1,7 +1,7 @@
-Board: ESP8266
+Board: Arduino Uno
 
 Used Pins:
-	2	in	Rain sensor reed contact
+	2	in	gas sensor reed contact
 
 Current Values are stored each hour in EEPROM
 
