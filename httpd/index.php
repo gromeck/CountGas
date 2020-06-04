@@ -68,7 +68,7 @@ $macaddr = exec('arp '.ARDUINO.' | tail -1 | tr -s " " | cut -f3 -d" "');
 /*
 **	get the current values from the selected arduino
 */
-$arduinoreply = file_get_contents('http://'.ARDUINO.'/');
+$arduinoreply = file_get_contents('http://'.ARDUINO.'/?all=1');
 //echo "<code>arduinoreply=".$arduinoreply."</code><br>";
 $counter = preg_filter("/(.*)COUNTER ([0-9\.]+)(.*)/msi","$2",$arduinoreply);
 $increment = preg_filter("/(.*)INCREMENT ([0-9\.]+)(.*)/msi","$2",$arduinoreply);
@@ -161,7 +161,7 @@ input[type="submit"], input[type="button"] {
 }
 
 </style>
-<h1>Arduino GAS</h1>
+<h1><?php print ARDUINO ?></h1>
 <?php if (@$msg) { ?>
 <div style="background-color:#a0f0a0; padding:4px; margin:0px;"><b><font familiy="courier"><?php print $msg ?></font></b></div>
 <?php } ?>
