@@ -1,10 +1,11 @@
 <?php
 /*
 **	server side script to configure an Arduino
-**	which runs the powecount sketch and provides
+**	which runs the count sketch and provides
 **	a tiny http server
 **
 **	(c) 2013 by Christian.Lorenz@gromeck.de
+**	(c) 2020 by Christian.Lorenz@gromeck.de
 */
 
 /*
@@ -131,14 +132,28 @@ function init()
 <style>
 body {
 	margin:0;
-	padding-left:0.5em;
 	border:0;
-	font-size:1.5em;
+	border:0;
+	font-size:1.5rem;
 }
 h1 {
-	padding:0;
-	margin:0;
+	font-size:2rem;
 }
+.header {
+	background-color:#c0c0c0;
+	width:100%;
+	padding:4px;
+}
+.message {
+	background-color:#a0f0a0;
+	padding:4px;
+}
+
+.error {
+	background-color:#f0a0a0;
+	padding:4px;
+}
+
 input[type="text"], input[type="number"] {
 	font-family:Courier,Monospace;
 	font-size:1.2em;
@@ -146,9 +161,11 @@ input[type="text"], input[type="number"] {
 	border:1px solid black;
 	padding:2px;
 }
+
 input[type="checkbox"] {
 	width:1em;
 }
+
 input[type="submit"], input[type="button"] {
 	font-size:1.2em;
 	width:5em;
@@ -156,12 +173,15 @@ input[type="submit"], input[type="button"] {
 	padding:2px;
 	background-color:#f0f0f0;
 }
+
 #config {
-	width:10em;
+	width:10rem;
 }
 
 </style>
-<h1>Arduino GAS</h1>
+<div>
+	<h1>Arduino GAS</h1>
+</div>
 <?php if (@$msg) { ?>
 <div style="background-color:#a0f0a0; padding:4px; margin:0px;"><b><font familiy="courier"><?php print $msg ?></font></b></div>
 <?php } ?>
