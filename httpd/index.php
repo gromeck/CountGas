@@ -1,10 +1,11 @@
 <?php
 /*
 **	server side script to configure an Arduino
-**	which runs the powecount sketch and provides
+**	which runs the count sketch and provides
 **	a tiny http server
 **
 **	(c) 2013 by Christian.Lorenz@gromeck.de
+**	(c) 2020 by Christian.Lorenz@gromeck.de
 */
 
 /*
@@ -131,14 +132,38 @@ function init()
 <style>
 body {
 	margin:0;
-	padding-left:0.5em;
 	border:0;
-	font-size:1.5em;
+	border:0;
+	font-size:1.5rem;
 }
 h1 {
-	padding:0;
-	margin:0;
+	font-size:2rem;
 }
+.header {
+	background-color:#c0c0c0;
+	width:100%;
+	padding:0.1rem;
+	padding-left:1rem;
+}
+.content {
+	width:100%;
+	padding:0.5rem;
+}
+.footer {
+	background-color:#c0c0c0;
+	width:100%;
+	padding:1rem;
+}
+.message {
+	background-color:#a0f0a0;
+	padding:1rem;
+}
+
+.error {
+	background-color:#f0a0a0;
+	padding:1rem;
+}
+
 input[type="text"], input[type="number"] {
 	font-family:Courier,Monospace;
 	font-size:1.2em;
@@ -146,28 +171,31 @@ input[type="text"], input[type="number"] {
 	border:1px solid black;
 	padding:2px;
 }
+
 input[type="checkbox"] {
 	width:1em;
 }
+
 input[type="submit"], input[type="button"] {
-	font-size:1.2em;
-	width:5em;
-	border:1px solid black;
-	padding:2px;
+	font-size:1.5rem;
 	background-color:#f0f0f0;
-}
-#config {
-	width:10em;
+	border:1px solid black;
+	margin-right:0.3rem;
+	padding-left:1rem;
+	padding-right:1rem;
 }
 
 </style>
-<h1><?php print ARDUINO ?></h1>
+<div class=header>
+	<h1><?php print ARDUINO ?></h1>
+</div>
 <?php if (@$msg) { ?>
 <div style="background-color:#a0f0a0; padding:4px; margin:0px;"><b><font familiy="courier"><?php print $msg ?></font></b></div>
 <?php } ?>
 <?php if (@$error) { ?>
 <div style="background-color:#f0a0a0; padding:4px; margin:0px;"><b><font familiy="courier"><?php print $error ?></font></b></div>
 <?php } ?>
+<div class=content>
 <table>
 	<form method="POST">
 	<?php if ($config) { ?>
@@ -216,22 +244,15 @@ input[type="submit"], input[type="button"] {
 				onkeyup="captcha_changed()" maxlength=<?php print CAPTCHA_LENGTH ?>>
 			<input type="hidden" name="captcharequest" value="<?php print $captcha ?>"></td>
 	</tr>
-	<tr>
-		<td></td>
-		<td>
-			<input type="button" name="reload" value="Reload" onClick="window.document.location.href = '?';">
-			<input type="submit" name="set" id="setbutton" value="Set"></td>
-		</td>
-	</tr>
-	<?php if (!$config) { ?>
-	<tr>
-		<td></td>
-		<td>
-			<input type="button" id="config" name="config" value="Configure" onClick="window.document.location.href  = '?config=1';">
-		</td>
-	</tr>
-	<?php } ?>
 	</form>
 </table>
+</div>
+<div class=footer>
+	<input type="submit" name="set" id="setbutton" value="Set">
+	<input type="button" name="reload" id="reload" value="Reload" onClick="window.document.location.href = '?';">
+	<?php if (!$config) { ?>
+	<input type="button" name="config" id="config" value="Configure" onClick="window.document.location.href = '?config=1';">
+	<?php } ?>
+</div>
 </body>
 </html>
