@@ -36,15 +36,15 @@ if (@$_POST['set']) {
 			$url .= "&ntpip=$ntpip";
 			$msg .= "Setting NTP server IP address to $ntpip.<br>";
 		}
-		if (@$_POST['setcounterval'] && $counterval = @$_POST['counterval']) {
-			$url .= "&counterval=$counterval";
-			$msg .= "Setting counter value to $counterval.<br>";
+		if (@$_POST['setcounter'] && $counter = @$_POST['counter']) {
+			$url .= "&counter=$counter";
+			$msg .= "Setting counter value to $counter.<br>";
 		}
-		if (@$_POST['setcounterinc'] && $counterinc = @$_POST['counterinc']) {
-			$url .= "&counterinc=$counterinc";
-			$msg .= "Setting counter increment to $counterinc.<br>";
+		if (@$_POST['setincrement'] && $increment = @$_POST['increment']) {
+			$url .= "&increment=$increment";
+			$msg .= "Setting counter increment to $increment.<br>";
 		}
-		//$msg .= "<br>Arduino GET request:<br><pre>$url</pre>";
+		$msg .= "<br>Arduino GET request:<br><pre>$url</pre>";
 
 		/*
 		**	do the http request
@@ -70,12 +70,14 @@ $macaddr = exec('arp '.ARDUINO.' | tail -1 | tr -s " " | cut -f3 -d" "');
 */
 $arduinoreply = file_get_contents('http://'.ARDUINO.'/');
 //echo "<code>arduinoreply=".$arduinoreply."</code><br>";
-$counterval = preg_filter("/(.*)COUNTER (\d+)(.*)/msi","$2",$arduinoreply);
-$counterinc = preg_filter("/(.*)INCREMENT (\d+)(.*)/msi","$2",$arduinoreply);
-$ntpip = preg_filter("/(.*)NTPIP (\d+\.\d+\.\d+\.\d+)(.*)/msi","$2",$arduinoreply);
-//echo "<code>counterval=".$counterval."</code><br>";
-//echo "<code>counterinc=".$counterinc."</code><br>";
-//echo "<code>netip=".$netip."</code><br>";
+$counter = preg_filter("/(.*)COUNTER ([0-9\.]+)(.*)/msi","$2",$arduinoreply);
+$increment = preg_filter("/(.*)INCREMENT ([0-9\.]+)(.*)/msi","$2",$arduinoreply);
+$ntpip = preg_filter("/(.*)NTPIP ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)(.*)/msi","$2",$arduinoreply);
+$macaddr = preg_filter("/(.*)MACADDR ([0-9a-f]+\:[0-9a-f]+\:[0-9a-f]+\:[0-9a-f]+\:[0-9a-f]+\:[0-9a-f]+)(.*)/msi","$2",$arduinoreply);
+//echo "<code>counter=".$counter."</code><br>";
+//echo "<code>increment=".$increment."</code><br>";
+//echo "<code>ntpip=".$ntpip."</code><br>";
+//echo "<code>macaddr=".$macaddr."</code><br>";
 
 /*
 **	compute a simple captcha
@@ -113,13 +115,14 @@ function captcha_changed()
 function init()
 {
 	captcha_changed();
-	var counterval = document.getElementById('counterval');
+	var counter = document.getElementById('counter');
 
-	if (counterval) {
-		counterval.focus();
-		var val = counterval.value;
-		counterval.value = '';
-		counterval.value = val;
+	if (counter) {
+		counter.focus();
+		return;
+		var val = counter.value;
+		counter.value = '';
+		counter.value = val;
 	}
 }
 </script>
@@ -186,21 +189,21 @@ input[type="submit"], input[type="button"] {
 	</tr>
 	<?php } ?>
 	<tr>
-		<td><input type="checkbox" name="setcounterval" value="1" checked></td>
+		<td><input type="checkbox" name="setcounter" value="1" checked></td>
 		<td><b>Counter Value:</b></td>
 	</tr>
 	<tr>
 		<td></td>
-		<td><input type="number" step="any" name="counterval" id="counterval" value="<?php print $counterval ?>"></td>
+		<td><input type="text" name="counter" id="counter" value="<?php print $counter ?>"></td>
 	</tr>
 	<?php if ($config) { ?>
 	<tr>
-		<td><input type="checkbox" name="setcounterinc" value="1"></td>
+		<td><input type="checkbox" name="setincrement" value="1"></td>
 		<td><b>Counter Increment:</b></td>
 	</tr>
 	<tr>
 		<td></td>
-		<td><input type="number" step="any" name="counterinc" value="<?php print $counterinc ?>"></td>
+		<td><input type="text" name="increment" value="<?php print $increment ?>"></td>
 	</tr>
 	<?php } ?>
 	<tr>

@@ -34,7 +34,6 @@ static double _counter_inc = 1000;
 */
 #define COUNTER_MIN_TRIGGER_LENGTH 50
 
-
 /* 
 **  flag for the counter trigger
 */
@@ -240,5 +239,5 @@ void CounterUpdate(void)
      * maybe it's time to write the counter to the EEPROM
      */
     if (t >= _counter_val_written_time + COUNTER_EEPROM_WRITE_CYCLE)
-      CounterSetValue(CounterGetValue());
+      CounterSetValue(COUNTER2DOUBLE);
 }/**/
