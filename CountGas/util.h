@@ -1,10 +1,9 @@
 /*
 ** util prototypes
 */
+
 #ifndef __UTIL_H__
 #define __UTIL_H__ 1
-
-#include "wifi.h"
 
 #if DBG
 /*
@@ -18,7 +17,7 @@
 /*
  * convert an IP address to a C string
  */
-#define IPAddressToString(addr)   ((addr).toString().c_str())
+#define IPAddressToString(addr)   AddressToString(IPAddressToBytes(addr),4,1)
 
 /*
  * convert an IP address to a field of bytes
@@ -33,7 +32,7 @@ IPAddress BytesToIPAddress(byte *bytes);
 /*
 **  return a given IP or HW address as a string
 */
-const char *AddressToString(byte *addr,int addrlen,int dec,char sep);
+const char *AddressToString(const byte *addr,int addrlen,int dec);
 
 
 /*

@@ -1,21 +1,21 @@
 /*
-**	counter prototypes
+**  counter prototypes
 */
 #ifndef __COUNTER_H__
 #define __COUNTER_H__ 1
 
 /*
-**	initialize the counter
+**  initialize the counter
 */
 void CounterInit(int counter_pin_in,int counter_pin_out,int eeprom_addr);
 
 /*
-**	overwrite the counter
+**  overwrite the counter
 */
 void CounterSetValue(double counter);
 
 /*
-**	read the counter
+**  read the counter
 */
 double CounterGetValue(void);
 
@@ -30,7 +30,7 @@ void CounterSetIncrement(double inc);
 double CounterGetIncrement(void);
 
 /*
-**	update the counter handling
+**  update the counter handling
 */
 void CounterUpdate(void);
 

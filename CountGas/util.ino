@@ -1,5 +1,5 @@
 /*
-**	util functions
+**  util functions
 */
 #include "util.h"
 
@@ -32,7 +32,7 @@ IPAddress BytesToIPAddress(uint8_t *bytes)
 /*
 **    generic conversion
 */
-const char *AddressToString(byte *addr,int addrlen,int dec)
+const char *AddressToString(const byte *addr,int addrlen,int dec)
 {
     static char str[25];
     int len = 0;
@@ -83,7 +83,7 @@ void dump(String title,const byte *addr,const int len)
         byte x = addr[row * BYTES_PER_ROW + col];
         sprintf(tmp," %02x",x);
         dump_hex += tmp;
-        sprintf(tmp,"%c",(isprint(x)) ? x : '.');
+        sprintf(tmp,"%c",(0 && isprint(x)) ? x : '.');
         dump_ascii += tmp;
       }
 
