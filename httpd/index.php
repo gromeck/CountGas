@@ -1,6 +1,6 @@
 <?php
 /*
-**	server side script to configure an Arduino
+**	server side script to configure an uController
 **	which runs the count sketch and provides
 **	a tiny http server
 **
@@ -9,26 +9,26 @@
 */
 
 /*
-**	hostname of the arduino
+**	hostname of the uController
 */
-define('ARDUINO','gmeter.site');
+define('UCONTROLLER','gmeter.site');
 define('CAPTCHA_LENGTH',3);
 
 /*
-**	if set, we will offer options to configure the device
+**	if set, we will offer options to configure the uController
 */
 $config = (@$_GET['config']) ? 1 : 0;
 
 if (@$_POST['set']) {
 	/*
-	**	write the data into arduino
+	**	write the data into the uController
 	*/
 	if ($_POST['captcharequest'] == $_POST['captchareply']) {
 		/*
 		**	build up the url
 		*/
-		$url = 'http://'.ARDUINO.'/?';
-		$msg = 'Arduino is '.ARDUINO.'<br>';
+		$url = 'http://'.UCONTROLLER.'/?';
+		$msg = 'uController is '.UCONTROLLER.'<br>';
 		if (@$_POST['setmacaddr'] && $macaddr = @$_POST['macaddr']) {
 			$url .= "&macaddr=$macaddr";
 			$msg .= "Setting MAC address to $macaddr.<br>";
@@ -45,13 +45,13 @@ if (@$_POST['set']) {
 			$url .= "&increment=$increment";
 			$msg .= "Setting counter increment to $increment.<br>";
 		}
-		$msg .= "<br>Arduino GET request:<br><pre>$url</pre>";
+		$msg .= "<br>uController GET request:<br><pre>$url</pre>";
 
 		/*
 		**	do the http request
 		*/
 		$reply = file_get_contents($url);
-		$msg .= "<br>Arduino reply:<br><pre>$reply</pre>";
+		$msg .= "<br>uController reply:<br><pre>$reply</pre>";
 	}
 	else {
 		/*
@@ -64,21 +64,25 @@ if (@$_POST['set']) {
 /*
 **	find out some network parameters
 */
-$macaddr = exec('arp '.ARDUINO.' | tail -1 | tr -s " " | cut -f3 -d" "');
+$macaddr = exec('arp '.UCONTROLLER.' | tail -1 | tr -s " " | cut -f3 -d" "');
 
 /*
-**	get the current values from the selected arduino
+**	get the current values from the selected uController
 */
-$arduinoreply = file_get_contents('http://'.ARDUINO.'/?all=1');
-//echo "<code>arduinoreply=".$arduinoreply."</code><br>";
-$counter = preg_filter("/(.*)COUNTER ([0-9\.]+)(.*)/msi","$2",$arduinoreply);
-$increment = preg_filter("/(.*)INCREMENT ([0-9\.]+)(.*)/msi","$2",$arduinoreply);
-$ntpip = preg_filter("/(.*)NTPIP ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)(.*)/msi","$2",$arduinoreply);
-$macaddr = preg_filter("/(.*)MACADDR ([0-9a-f]+\:[0-9a-f]+\:[0-9a-f]+\:[0-9a-f]+\:[0-9a-f]+\:[0-9a-f]+)(.*)/msi","$2",$arduinoreply);
-//echo "<code>counter=".$counter."</code><br>";
-//echo "<code>increment=".$increment."</code><br>";
-//echo "<code>ntpip=".$ntpip."</code><br>";
-//echo "<code>macaddr=".$macaddr."</code><br>";
+$ucontrollerreply = explode("\n",file_get_contents('http://'.UCONTROLLER.'/?all=1'));
+foreach ($ucontrollerreply as $reply) {
+	list ($key,$value) = explode(" ",$reply,2);
+	switch ($key) {
+		case 'COUNTER':		$counter = $value;		break;
+		case 'INCREMENT':	$increment = $value;	break;
+		case 'MACADDR':		$macadd = $value;		break;
+		case 'NTPIP':		$ntpip = $value;		break;
+	}
+}
+#echo "<code>counter=".$counter."</code><br>";
+#echo "<code>increment=".$increment."</code><br>";
+#echo "<code>ntpip=".$ntpip."</code><br>";
+#echo "<code>macaddr=".$macaddr."</code><br>";
 
 /*
 **	compute a simple captcha
@@ -92,9 +96,8 @@ $captcha = rand(pow(10,CAPTCHA_LENGTH - 1),pow(10,CAPTCHA_LENGTH) - 1);
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Arduino GAS</title>
+<title>&#181;Controller <?php print UCONTROLLER ?></title>
 <meta http-equiv="Pragma" content="no-cache">
-<link rel="stylesheet" href="rrd.css" type="text/css">
 <script language="JavaScript" type="text/javascript">
 function captcha_changed()
 {
@@ -118,13 +121,8 @@ function init()
 	captcha_changed();
 	var counter = document.getElementById('counter');
 
-	if (counter) {
+	if (counter)
 		counter.focus();
-		return;
-		var val = counter.value;
-		counter.value = '';
-		counter.value = val;
-	}
 }
 </script>
 </head>
@@ -187,7 +185,7 @@ input[type="submit"], input[type="button"] {
 
 </style>
 <div class=header>
-	<h1><?php print ARDUINO ?></h1>
+	<h1>&#181;Controller <?php print UCONTROLLER ?></h1>
 </div>
 <?php if (@$msg) { ?>
 <div style="background-color:#a0f0a0; padding:4px; margin:0px;"><b><font familiy="courier"><?php print $msg ?></font></b></div>
@@ -195,9 +193,9 @@ input[type="submit"], input[type="button"] {
 <?php if (@$error) { ?>
 <div style="background-color:#f0a0a0; padding:4px; margin:0px;"><b><font familiy="courier"><?php print $error ?></font></b></div>
 <?php } ?>
+<form method="POST">
 <div class=content>
 <table>
-	<form method="POST">
 	<?php if ($config) { ?>
 	<tr>
 		<td><input type="checkbox" name="setmacaddr" value="1"></td>
@@ -244,7 +242,6 @@ input[type="submit"], input[type="button"] {
 				onkeyup="captcha_changed()" maxlength=<?php print CAPTCHA_LENGTH ?>>
 			<input type="hidden" name="captcharequest" value="<?php print $captcha ?>"></td>
 	</tr>
-	</form>
 </table>
 </div>
 <div class=footer>
@@ -254,5 +251,6 @@ input[type="submit"], input[type="button"] {
 	<input type="button" name="config" id="config" value="Configure" onClick="window.document.location.href = '?config=1';">
 	<?php } ?>
 </div>
+</form>
 </body>
 </html>
