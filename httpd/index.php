@@ -11,7 +11,7 @@
 /*
 **	hostname of the uController
 */
-define('UCONTROLLER','gmeter.site');
+define('UCONTROLLER','gasmeter.site');
 define('CAPTCHA_LENGTH',3);
 
 /*
